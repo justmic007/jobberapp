@@ -34,3 +34,16 @@ services:
       - '3306:3306'
     volumes:
       - ./docker-volumes/mysql:/var/lib/mysql
+  postgres:
+    container_name: postgres_container
+    image: postres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: jobber
+      POSTGRES_USER: jobber
+      POSTGRES_DB: jobber
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./docker-volumes/postgres:/var/lib/postgresql
