@@ -1,4 +1,4 @@
-version: '3.9'
+# version: '3.9'
 services:
   redis:
     container_name: redis_container
@@ -36,7 +36,7 @@ services:
       - ./docker-volumes/mysql:/var/lib/mysql
   postgres:
     container_name: postgres_container
-    image: postres
+    image: postgres
     restart: always
     shm_size: 128mb
     environment:
@@ -49,7 +49,7 @@ services:
       - ./docker-volumes/postgres:/var/lib/postgresql
   rabbitmq:
     container_name: rabbitmq_container
-    image: rabbitmq:4.0-rc-management-alpine⁠
+    image: rabbitmq:3.13.6-management
     restart: always
     ports:
       # AMQP protocol port
@@ -61,18 +61,23 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
     restart: always
     environment:
-      ES_JAVA_OPTS: -Xmx1g -Xms1g
+      ES_JAVA_OPTS: -Xmx2g -Xms2g
       bootstrap.memory_lock: "true"
       discovery.type: single-node
-      xpack.security.enabled: "false"
+      network.host: 0.0.0.0
+      transport.host: 127.0.0.1
+      http.host: 0.0.0.0
+      xpack.security.enabled: "true"
       xpack.security.authc.api_key.enabled: "true"
       xpack.monitoring.collection.enabled: "true"
       xpack.security.enrollment.enabled: "true"
+      xpack.security.authc.token.enabled: "true"
+      ELASTIC_PASSWORD: admin1234
     ports:
       - '9200:9200'
       - '9300:9300' # for multi-node
     volumes:
-      - ./docker-volumes/elasticsearch-data:/usr/share/elasticsearch/data
+      - ./docker-volumes/elasticsearch:/usr/share/elasticsearch/data
     networks:
       - elastic
   kibana:
@@ -81,7 +86,11 @@ services:
     restart: always
     environment:
       # SERVER_NAME: kibana.example.org
-      ELASTICSEARCH_HOSTS: ["http://elasticsearch_container:9200"]
+      - ELASTICSEARCH_HOSTS=["http://elasticsearch_container:9200"]
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=kibana
+      - ELASTICSEARCH_SERVICEACCOUNT_TOKEN=AAEAAWVsYXN0aWMva2liYW5hL2pvYmJlci1raWJhbmE6RDI2TTNDejBRYjYxbW5PMEN1R2d5QQ
+      - XPACK_FLEET_AGENTS_ELASTICSEARCH_HOSTS=["http://elasticsearch_container:9200"]
     ports:
       - '5601:5601'
     networks:
@@ -90,7 +99,12 @@ services:
       - ./kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     depends_on:
       - elasticsearch
-networks::
+
+networks:
   elastic:
     name: elastic
 
+
+
+
+# Command to update Kibana user and password ---> curl -s -X POST -u elastic:admin1234 -H "Content-Type: application/json" http://localhost:9200/_security/user/kibana_system/_password -d "{\"password\":\"kibana\" }"
