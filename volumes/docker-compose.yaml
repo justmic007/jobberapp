@@ -29,7 +29,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: jobber
-      MYSQL_DATABASE: jobber
+      MYSQL_DATABASE: jobber_auth
       MYSQL_USER: jobber
       MYSQL_PASSWORD: jobber
     ports:
